@@ -1,0 +1,44 @@
+
+/* wwwroot/css/index.css */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: var(--bg-body);
+    color: var(--color-primary);
+}
+
+nav {
+    padding: 20px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.div-entrar-inscrever {
+    display: flex;
+    gap: 15px;
+}
+
+.button-geral {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.button-entrar {
+    background-color: var(--bg-button-entrar);
+    color: white;
+}
+
+    .button-entrar:hover {
+        background-color: #574fd4;
+        transform: translateY(-2px);
+    }

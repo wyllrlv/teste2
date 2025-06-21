@@ -1,0 +1,207 @@
+﻿@model ex_full.Models.Treino
+
+@{
+    ViewData["Title"] = Model.Titulo;
+    Layout = "_Layout";
+}
+
+<section>
+    <nav>
+        <div class="div-entrar-inscrever">
+            <button class="button-geral button-entrar" onclick="window.location.href='/'">
+                <i class="bi bi-box-arrow-left"></i> Sair
+            </button>
+        </div>
+    </nav>
+</section>
+
+<div id="excontainer">
+    <div class="gridexercicio">
+        @foreach (var exercicio in Model.Exercicios)
+        {
+            <h4> @exercicio.Nome @exercicio.Series x @exercicio.Repeticoes</h4>
+        }
+    </div>
+
+    <div class="exitens gridtitulo">
+        <h1>@Model.Titulo</h1>
+    </div>
+
+    <div class="exitens griddescricao">
+        <h3><i class="bi bi-info-circle-fill"></i> Descrição</h3>
+        <p>@Model.Descricao</p>
+    </div>
+
+    <div class="exitens gridavaliacao">
+        <h3><i class="bi bi-star-fill"></i> Avaliações: @Model.Avaliacao.ToString("F1")</h3>
+    </div>
+
+    <div class="gridcomentario">
+        @if (Model.Comentarios.Any())
+        {
+            @foreach (var comentario in Model.Comentarios)
+            {
+                <div class="comentario-item" data-comentario-id="@comentario.Id">
+                    <div class="comentario-header">
+                        <div class="comentario-usuario">
+                            <i class="bi bi-person-circle"></i>
+                            <strong>@comentario.Usuario</strong> - @comentario.DataCriacao.ToString("dd/MM/yyyy HH:mm")
+                        </div>
+                        <div class="comentario-actions">
+                            <button class="btn-editar" onclick="editarComentario(@comentario.Id)" title="Editar comentário">
+                                <i class="bi bi-pencil-square"></i>
+                            </button>
+                            <button class="btn-excluir" onclick="excluirComentario(@comentario.Id, @Model.Id)" title="Excluir comentário">
+                                <i class="bi bi-trash3"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="comentario-texto" id="texto-@comentario.Id">
+                        @comentario.Texto
+                    </div>
+                    <div class="comentario-edicao" id="edicao-@comentario.Id" style="display: none;">
+                        <form method="post" action="@Url.Action("EditarComentario", "Treino")">
+                            <input type="hidden" name="comentarioId" value="@comentario.Id" />
+                            <input type="hidden" name="treinoId" value="@Model.Id" />
+                            <textarea name="novoTexto" rows="2" cols="50" required>@comentario.Texto</textarea>
+                            <div class="edicao-buttons">
+                                <button type="submit" class="btn-salvar">
+                                    <i class="bi bi-check-lg"></i> Salvar
+                                </button>
+                                <button type="button" class="btn-cancelar-edicao" onclick="cancelarEdicao(@comentario.Id)">
+                                    <i class="bi bi-x-lg"></i> Cancelar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="sem-comentarios">
+                <i class="bi bi-chat-dots"></i>
+                Nenhum comentário ainda. Seja o primeiro a comentar!
+            </div>
+        }
+    </div>
+
+    <div class="exitens gridbuttoncomentar">
+        <div class="gridbuttoncomentar">
+            <button class="button-comentar" onclick="abrirModalComentario()">
+                <i class="bi bi-chat-plus"></i> Comentar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para comentário -->
+<div id="modalComentario" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close" onclick="fecharModalComentario()">
+            <i class="bi bi-x-lg"></i>
+        </span>
+        <h3><i class="bi bi-chat-square-text"></i> Adicionar Comentário</h3>
+        <form method="post" action="@Url.Action("AdicionarComentario", "Treino")">
+            <input type="hidden" name="treinoId" value="@Model.Id" />
+            <textarea name="comentario" rows="4" cols="50" placeholder="Digite seu comentário..." required></textarea>
+            <br /><br />
+            <button type="submit" class="button-comentar">
+                <i class="bi bi-send"></i> Enviar Comentário
+            </button>
+            <button type="button" class="button-cancelar" onclick="fecharModalComentario()">
+                <i class="bi bi-x-circle"></i> Cancelar
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal de confirmação para exclusão -->
+<div id="modalConfirmacao" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-warning">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <h3>Confirmar Exclusão</h3>
+        </div>
+        <p>Tem certeza que deseja excluir este comentário?</p>
+        <div class="confirmacao-buttons">
+            <button id="btnConfirmarExclusao" class="btn-confirmar">
+                <i class="bi bi-trash3"></i> Sim, Excluir
+            </button>
+            <button class="btn-cancelar-exclusao" onclick="fecharModalConfirmacao()">
+                <i class="bi bi-x-circle"></i> Cancelar
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function abrirModalComentario() {
+        document.getElementById('modalComentario').style.display = 'block';
+    }
+
+    function fecharModalComentario() {
+        document.getElementById('modalComentario').style.display = 'none';
+    }
+
+    function editarComentario(comentarioId) {
+        document.getElementById('texto-' + comentarioId).style.display = 'none';
+        document.getElementById('edicao-' + comentarioId).style.display = 'block';
+    }
+
+    function cancelarEdicao(comentarioId) {
+        document.getElementById('texto-' + comentarioId).style.display = 'block';
+        document.getElementById('edicao-' + comentarioId).style.display = 'none';
+    }
+
+    let comentarioParaExcluir = null;
+    let treinoParaRedirect = null;
+
+    function excluirComentario(comentarioId, treinoId) {
+        comentarioParaExcluir = comentarioId;
+        treinoParaRedirect = treinoId;
+        document.getElementById('modalConfirmacao').style.display = 'block';
+    }
+
+    function fecharModalConfirmacao() {
+        document.getElementById('modalConfirmacao').style.display = 'none';
+        comentarioParaExcluir = null;
+        treinoParaRedirect = null;
+    }
+
+    document.getElementById('btnConfirmarExclusao').onclick = function() {
+        if (comentarioParaExcluir && treinoParaRedirect) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '@Url.Action("ExcluirComentario", "Treino")';
+
+            const inputComentario = document.createElement('input');
+            inputComentario.type = 'hidden';
+            inputComentario.name = 'comentarioId';
+            inputComentario.value = comentarioParaExcluir;
+
+            const inputTreino = document.createElement('input');
+            inputTreino.type = 'hidden';
+            inputTreino.name = 'treinoId';
+            inputTreino.value = treinoParaRedirect;
+
+            form.appendChild(inputComentario);
+            form.appendChild(inputTreino);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    };
+
+    // Fechar modais clicando fora
+    window.onclick = function(event) {
+        const modalComentario = document.getElementById('modalComentario');
+        const modalConfirmacao = document.getElementById('modalConfirmacao');
+
+        if (event.target === modalComentario) {
+            fecharModalComentario();
+        }
+        if (event.target === modalConfirmacao) {
+            fecharModalConfirmacao();
+        }
+    };
+</script>
